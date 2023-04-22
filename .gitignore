@@ -1,2 +1,9 @@
 .env
 __pycache__
+.idea/.name
+.idea/congenial-system.iml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/modules.xml
+.idea/misc.xml
+.idea/vcs.xml

@@ -1,4 +1,6 @@
 import javalang
+from Indexer.Elasticsearch import Elastic
+
 
 class CodeParser:
     def __init__(self, lang):
@@ -44,7 +46,7 @@ class CodeParser:
                 class_["methods"].append({
                     "name": method.name,
                     "modifiers": [modifier for modifier in method.modifiers],
-                    "return_type": self.getType(method.return_type) if method.return_type else "void",
+                    "return_type": self.getType(method.return_type) if method.return_type else {"name": "void"},
                     "parameters": [{"name": param.name, "type": self.getType(param.type)} for param in method.parameters], 
                     "documentation": method.documentation
                 })
@@ -133,4 +135,8 @@ if __name__ == "__main__":
     
     parser = CodeParser(lang="java")
     res = parser.parseFile(code2)
-    print(res)
+    elastic = Elastic("8JLfSQS5uM8bYmJrPrRN")
+    response = elastic.search("returnType:int OR returnType:void AND methodName:makeArr OR methodName:main")
+    print("Response: " + str(response))
+
+
