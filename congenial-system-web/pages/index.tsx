@@ -15,6 +15,8 @@ export default function Home() {
 	const [returnType, setReturnType] = useState<string>('')
 	const [parameters, setParameters] = useState<Array<{ name: string, type: string }>>([{ name: '', type: ''}])
 
+	const [searchType, setSearchType] = useState<{name: string, value: string}>({name: 'Method', value: 'method'})
+
 	const updateParameterName = (index: number, name: string) => {
 		const newParameters = [...parameters]
 		newParameters[index].name = name
@@ -42,6 +44,13 @@ export default function Home() {
 				</h1>
 
 				<div className='sm:w-full md:w-2/3 xl:w-1/2 space-y-5'>
+					<Dropdown
+						label={"Search type"}
+						selected={searchType}
+						setSelected={setSearchType}
+						alts={[{ name: "Method", value: "method" }, { name: "Class", value: "class" }]}
+						className={""}
+					/>
 					<div className='grid sm:grid-cols-1 md:grid-cols-2 gap-5'>
 						<Input
 							label="Method name"
@@ -90,7 +99,11 @@ export default function Home() {
 							]}
 						/>
 					</div> */}
-
+					
+					{searchType.value == 'class' && (
+						<h1 className='text-md font-semibold text-white'>{searchType.name}</h1>
+					)	
+					}
 					<h3 className='text-md font-semibold text-white'>Parameters</h3>
 					<div className='w-full space-y-5'>
 						{Array.from({ length: parameters.length }, (_, i) => i).map((i) => {
