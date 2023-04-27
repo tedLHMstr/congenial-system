@@ -23,6 +23,7 @@ class CodeParser:
                         - type_args...
                     - parameters
                     - documentation
+                    - position
     """
     def parseFile(self, code: str) -> object:
         res = {}
@@ -46,7 +47,8 @@ class CodeParser:
                     "modifiers": [modifier for modifier in method.modifiers],
                     "return_type": self.getType(method.return_type) if method.return_type else "void",
                     "parameters": [{"name": param.name, "type": self.getType(param.type)} for param in method.parameters], 
-                    "documentation": method.documentation
+                    "documentation": method.documentation,
+                    "position": method.position
                 })
             
             res["classes"].append(class_)
@@ -101,19 +103,7 @@ if __name__ == "__main__":
 
     code2 = """
     public class Main {
-
-	public static void main(String[] args) {
-		int[] hej = makeArr(500000);
-		
-		Tester.testAlg((int[] arr) -> SelectionSort.sort(arr), hej);
-		Tester.testAlg((int[] arr) -> InsertionSort.sort(arr), hej);
-		Tester.testAlg((int[] arr) -> BubbleSort.sort(arr), hej);
-		
-		
-		}
-	
-	
-	
+    
 	static int[] makeArr(int l) {
 		int[] result = new int[l];
 		
@@ -132,5 +122,13 @@ if __name__ == "__main__":
 """
     
     parser = CodeParser(lang="java")
-    res = parser.parseFile(code2)
-    print(res)
+    res = parser.parseFile(code)
+
+    # get the line of each method and print the code line from code2
+    for class_ in res["classes"]:
+        for method in class_["methods"]:
+            for i, line in enumerate(code.splitlines()):
+                if i >= method["position"][0] - 1:
+                    print(line)
+                    if i == method["position"][0] + 4:
+                        break
