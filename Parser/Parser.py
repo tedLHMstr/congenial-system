@@ -1,4 +1,6 @@
 import javalang
+from Indexer.Elasticsearch import Elastic
+
 
 class CodeParser:
     def __init__(self, lang):
@@ -133,6 +135,32 @@ if __name__ == "__main__":
 """
     
     parser = CodeParser(lang="java")
+    res = parser.parseFile(code2)
+    doc = {
+  "url": "http://www.github.com",
+  "className": "Sorting",
+  "modifiers": ["static", "public"],
+  "methods": [
+      {
+        "methodName": "bubble_Srt",
+        "returnType": "int[]",
+        "parameters": [
+          {"name": "arr", "type": "HashMap"}, {"name": "arr123", "type": "List"}
+        ],
+        "line": 2,
+        "modifiers": ["static", "public"]
+      }
+  ],
+  "line": 2,
+}
+
+    elastic = Elastic("8JLfSQS5uM8bYmJrPrRN")
+    # elastic.delete("java")
+    # elastic.create_index()
+    # elastic.index(doc)
+    response = elastic.search("className:notSorting OR className:Sorting AND methodName:bubble_Sort OR methodName: merge_sort AND modifiers:static-public")
+    print("Response: " + str(response))
+
     res = parser.parseFile(code)
 
     # get the line of each method and print the code line from code2
