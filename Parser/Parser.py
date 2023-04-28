@@ -15,28 +15,28 @@ class CodeParser:
         - classes (Array)
             - class
                 - name
-                - documentation
+                - line
+                - modifiers
                 - methods
                     - name
                     - modifiers
                     - return type
                         - type_args...
                     - parameters
-                    - documentation
+                    - position
     """
     def parseFile(self, code: str) -> object:
         res = {}
 
         tree = javalang.parse.parse(code)
 
-        res["package"] = tree.package.name if tree.package else None
-        res["imports"] = [imp.path for imp in tree.imports]
         res["classes"] = []
 
         for type_ in tree.types:
             class_ = {}
             class_["name"] = type_.name
-            class_["documentation"] = type_.documentation
+            class_["line"] = type_.position[0]
+            class_["modifiers"] = [modifier for modifier in type_.modifiers]
             class_["methods"] = []
 
             for method in type_.methods:
@@ -44,9 +44,9 @@ class CodeParser:
                 class_["methods"].append({
                     "name": method.name,
                     "modifiers": [modifier for modifier in method.modifiers],
-                    "return_type": self.getType(method.return_type) if method.return_type else "void",
-                    "parameters": [{"name": param.name, "type": self.getType(param.type)} for param in method.parameters], 
-                    "documentation": method.documentation
+                    "return_type": self.concatenate_type(self.getType(method.return_type)) if method.return_type else "void",
+                    "parameters": [{"name": param.name, "type": self.concatenate_type(self.getType(param.type))} for param in method.parameters], 
+                    "line": method.position[0]
                 })
             
             res["classes"].append(class_)
@@ -70,6 +70,19 @@ class CodeParser:
             return
         
         return c
+    
+    # Concatenate type arguments to type in a string format
+    def concatenate_type(self, type):
+        if type["name"]:
+            if "type_args" in type:
+                return type["name"] + "<" + ", ".join([self.concatenate_type(arg) for arg in type["type_args"]]) + ">"
+            else:
+                if "dimensions" in type:
+                    return type["name"] + "[]"*len(type["dimensions"])
+                else:
+                    return type["name"]
+        else:
+            return
 
 
 if __name__ == "__main__":
@@ -82,7 +95,7 @@ if __name__ == "__main__":
         public class Main {
 	
 
-	private static ArrayList<HashMap<Integer, ArrayList<String>>> makeArr(int l, HashMap<Integer, String> map) {
+	private static ArrayList<HashMap<ArrayList<Integer>, Person>> makeArr(int l, HashMap<Integer, String> map) {
 		int[] result = new int[l];
 		
 		for(int i = 0; i < l; i++) {
@@ -101,19 +114,7 @@ if __name__ == "__main__":
 
     code2 = """
     public class Main {
-
-	public static void main(String[] args) {
-		int[] hej = makeArr(500000);
-		
-		Tester.testAlg((int[] arr) -> SelectionSort.sort(arr), hej);
-		Tester.testAlg((int[] arr) -> InsertionSort.sort(arr), hej);
-		Tester.testAlg((int[] arr) -> BubbleSort.sort(arr), hej);
-		
-		
-		}
-	
-	
-	
+    
 	static int[] makeArr(int l) {
 		int[] result = new int[l];
 		
@@ -132,5 +133,21 @@ if __name__ == "__main__":
 """
     
     parser = CodeParser(lang="java")
-    res = parser.parseFile(code2)
-    print(res)
+    res = parser.parseFile(code)
+
+    # get the line of each method and print the code line from code2
+    for class_ in res["classes"]:
+        print(class_["methods"][0]["return_type"])
+        print(class_["methods"][0]["parameters"])
+        # print(class_["name"], class_["modifiers"])
+        # for i, line in enumerate(code.splitlines()):
+        #     if i >= class_["line"] - 1:
+        #         print(line)
+        #         break
+        
+        # for method in class_["methods"]:
+        #     for i, line in enumerate(code.splitlines()):
+        #         if i >= method["line"] - 1:
+        #             print(line)
+        #             if i == method["line"] + 4:
+        #                 break
