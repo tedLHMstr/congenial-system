@@ -58,8 +58,6 @@ class Elastic:
     def search(self, query):
         formatted_query = self.format_query(query)
         response = self.es.search(index=self.elastic_index, query=formatted_query)
-        response2 = self.es.search(index=self.elastic_index, query={"match_all": {}})
-        print(response2)
         return response
 
 
@@ -103,7 +101,6 @@ class Elastic:
 
         sub_query_list = query.split("AND")
         for element in sub_query_list:
-            print(element)
             should_terms = element.split("OR")
             is_multiple = len(should_terms) > 1
             for term_index in range(len(should_terms)):
