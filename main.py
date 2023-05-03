@@ -1,10 +1,10 @@
-# imoport Elastic # Import the elastic indexer object
+from Indexer.Elasticsearch import Elastic
 from Parser.Parser import CodeParser
 from Crawler.Crawler import Crawler
 import os
 from dotenv import load_dotenv
 
-def enrich_index(GITHUB_ACCESS_TOKEN):
+def enrich_index(GITHUB_ACCESS_TOKEN: str, es: Elastic):
     """
     Enrich the index with the data from crawling + parsing
     """
@@ -32,8 +32,8 @@ def enrich_index(GITHUB_ACCESS_TOKEN):
                 parsed_java_file = parser.parseFile(java_file['code'].decoded_content.decode("utf-8"))
                 print(parsed_java_file, java_file['url'])
 
-            #     # Add the parsed java file to the index
-            #     Elastic.index_java_file(parsed_java_file, java_file['url'])
+                # Index the parsed java file
+                es.index(parsed_java_file, java_file['url'])
 
 if __name__ == "__main__":
     load_dotenv(".env")

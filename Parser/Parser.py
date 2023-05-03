@@ -36,7 +36,7 @@ class CodeParser:
 
         for type_ in tree.types:
             class_ = {}
-            class_["name"] = type_.name
+            class_["className"] = type_.name
             class_["line"] = type_.position[0]
             class_["modifiers"] = [modifier for modifier in type_.modifiers]
             class_["methods"] = []
@@ -46,7 +46,7 @@ class CodeParser:
                 class_["methods"].append({
                     "name": method.name,
                     "modifiers": [modifier for modifier in method.modifiers],
-                    "return_type": self.concatenate_type(self.getType(method.return_type)) if method.return_type else "void",
+                    "returnType": self.concatenate_type(self.getType(method.return_type)) if method.return_type else "void",
                     "parameters": [{"name": param.name, "type": self.concatenate_type(self.getType(param.type))} for param in method.parameters], 
                     "line": method.position[0]
                 })

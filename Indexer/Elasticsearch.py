@@ -308,6 +308,14 @@ class Elastic:
                         should_list.append(term_query)
 
 
-        print("Query: " + str(formatted_query))
+        # print("Query: " + str(formatted_query))
         return formatted_query
 
+if __name__ == "__main__":
+    e = Elastic("")
+
+    query =  "methodName:bubble_srot AND returnType:int[] AND parameters: arr,int AND modifiers: public"
+    res = e.search(query)
+    for hit in res["hits"]["hits"]:
+        print("\n", hit["_score"])
+        print(hit["_source"])
