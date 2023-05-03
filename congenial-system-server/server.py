@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from Indexer.Elasticsearch import Elastic
+
+es = Elastic("")
+
 app = FastAPI()
 
 # CORS
@@ -12,10 +16,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def read_root():
+    return {"Congenial System API": "Running"}
+
 @app.get("/search")
 async def search(query: str):
-    print(query)
-    return {"message": query}
+    res = es.search(query)
+    return res
 
 if __name__ == "__main__":
     import uvicorn

@@ -14,7 +14,12 @@ import { validateName, validateParameter, validateType } from '@/validation/quer
 /* Handlers */
 import { query } from '@/api/search'
 
+/* Next router */
+import { useRouter } from 'next/router'
+
 export default function Home() {
+	const router = useRouter()
+
 	const [methodName, setMethodName] = useState<string>('')
 	// const [returnType, setReturnType] = useState<{ name: string, value: string }>(returnTypes[0])
 	const [returnType, setReturnType] = useState<string>('')
@@ -60,10 +65,15 @@ export default function Home() {
 		if(modifiersPart !== '') {
 			queryString += ` AND modifiers:${modifiersPart}`;
 		}
-			
-		const queryResponse = await query(queryString);
+		
+		try {
+			const queryResponse = await query(queryString);
+			setResponse(queryResponse.message);
+		} catch (error) {
+			console.log("Error in request");
+			return;
+		}
 
-		setResponse(queryResponse.message);
 	}	
 
 	const updateParameterName = (index: number, name: string) => {
@@ -79,6 +89,11 @@ export default function Home() {
 	}
 
 	const search = () => {
+		const q = encodeURIComponent("methodName:bubble_srot AND returnType:int[] AND parameters: arr,int AND modifiers: public")
+		router.push(`/search?q=${q}`)
+
+		return;
+
 		// Validate method name
 		if(!validateName(methodName)) {
 			console.log("Invalid methodname");
@@ -121,12 +136,11 @@ export default function Home() {
 			className={`min-h-screen`}
 		>
 			<div className="h-screen w-full pattern-cross pattern-indigo-600 pattern-bg-primarybg pattern-size-8 pattern-opacity-10 fixed"></div>
+
 			<div className='flex-col flex space-y-10 p-10 md:p-24 w-full items-center'>
 				<h1 className={`text-6xl font-bold text-center rounded-xl px-4 py-1 text-gray-100`}>
 					Congenial System
-				</h1><div>
-				
-    		</div>
+				</h1>
 				<div className='sm:w-full md:w-2/3 xl:w-1/2 space-y-5'>
 					<Dropdown
 						label={"Search type"}
