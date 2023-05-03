@@ -54,11 +54,11 @@ export default function Home() {
 		}
 
 		if(parameterPart !== '') {
-			queryString += ` OR parameters:${parameterPart}`;
+			queryString += ` AND parameters:${parameterPart}`;
 		}
 		
 		if(modifiersPart !== '') {
-			queryString += ` OR modifiers:${modifiersPart}`;
+			queryString += ` AND modifiers:${modifiersPart}`;
 		}
 			
 		const queryResponse = await query(queryString);
