@@ -7,14 +7,21 @@ type InputProps = {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     placeholder: string;
     className?: string;
+    errorMessage?: string;
 }
 
 function Input(props: InputProps) {
     return (
         <div className="flex flex-col space-y-1" >
-            {props.label && (
-                <h3 className='text-xs font-medium text-white'>{props.label}</h3>
-            )}
+            <div className="flex flex-row items-center">
+              {props.label && (
+                <h3 className="text-xs font-medium text-white">{props.label}</h3>
+              )}
+              {props.errorMessage && (
+                <span className="text-red-500 text-xs ml-2">{props.errorMessage}</span>
+              )}
+            </div>
+ 
             <input
                 value={props.value}
                 onChange={props.onChange}

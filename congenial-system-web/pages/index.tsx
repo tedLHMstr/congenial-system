@@ -9,7 +9,7 @@ import Dropdown from '@/components/Dropdown'
 import returnTypes from '@/assets/returnTypes'
 
 /* Query validator */
-import { validateName, validateParameter, validateType } from '@/validation/query'
+import { validateName, validateParameter, validateType, validateModifier } from '@/validation/query'
 
 /* Handlers */
 import { query } from '@/api/search'
@@ -20,60 +20,55 @@ import { useRouter } from 'next/router'
 export default function Home() {
 	const router = useRouter()
 
+	// Form states
 	const [methodName, setMethodName] = useState<string>('')
-	// const [returnType, setReturnType] = useState<{ name: string, value: string }>(returnTypes[0])
 	const [returnType, setReturnType] = useState<string>('')
 	const [parameters, setParameters] = useState<Array<{ name: string, type: string }>>([{ name: '', type: ''}])
 	const [modifiers, setModifiers] = useState<string>('')
-
 	const [searchType, setSearchType] = useState<{name: string, value: string}>({name: 'Method', value: 'method'})
 
-	// API response
-	const [response, setResponse] = useState("");
+	// Form error states
+	const [methodNameError, setMethodNameError] = useState<string>('');
+	const [returnTypeError, setReturnTypeError] = useState<string>('');
+	const [parametersError, setParametersError] = useState<string>('');
+	const [modifiersError, setModifiersError] = useState<string>('');
 
 	// Boolean operators
 	const [methodParamOperator, setMethodParamOperator] = useState<{name: string, value: string}>({name: 'OR', value: 'OR'});
 
-	const handleSearch = async () => {
-		// Construct parameter part
-		let parameterPart = '';
-		parameters.forEach(obj => {
-			if(obj.name === '' || obj.type === '') {
-				return;
-			}
+	const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>, errorSetter: React.Dispatch<React.SetStateAction<string>>) => {
+		return (event: React.ChangeEvent<HTMLInputElement>) => {
+			setter(event.target.value);
+			errorSetter('');
+		}
+	}
 
-			if(parameterPart !== '') {
-				parameterPart += '-';
-			}
-			parameterPart += obj.name + ',' + obj.type
-		})
+	const generateQuery = () => {
+		// Construct parameter part
+		const parameterPart = parameters
+			.filter(obj => obj.name && obj.type)
+			.map(obj => `${obj.name},${obj.type}`)
+			.join('-');
 
 		// Construct modifiers part
-		let modifiersPart = modifiers.replaceAll(',', '-');
+		const modifiersPart = modifiers.replaceAll(',', '-');
 
 		// Construct query string
 		let queryString = `methodName:${methodName}`;
 
-		if(returnType !== '') {
+		if (returnType) {
 			queryString += ` ${searchType.value === 'method' ? methodParamOperator.value : 'OR'} returnType:${returnType}`;
 		}
 
-		if(parameterPart !== '') {
+		if (parameterPart) {
 			queryString += ` AND parameters:${parameterPart}`;
 		}
-		
-		if(modifiersPart !== '') {
+
+		if (modifiersPart) {
 			queryString += ` AND modifiers:${modifiersPart}`;
 		}
-		
-		try {
-			const queryResponse = await query(queryString);
-			setResponse(queryResponse.message);
-		} catch (error) {
-			console.log("Error in request");
-			return;
-		}
 
+		return queryString;
 	}	
 
 	const updateParameterName = (index: number, name: string) => {
@@ -88,47 +83,47 @@ export default function Home() {
 		setParameters(newParameters)
 	}
 
-	const search = () => {
-		const q = encodeURIComponent("methodName:bubble_srot AND returnType:int[] AND parameters: arr,int AND modifiers: public")
-		router.push(`/search?q=${q}`)
-
-		return;
-
-		// Validate method name
-		if(!validateName(methodName)) {
-			console.log("Invalid methodname");
+	const handleSearch = () => {
+			// Validate method name
+		if (!validateName(methodName)) {
+			setMethodNameError("Invalid method name");
 			return;
-		}	
+		}
 
 		// Validate return type. Allow excluding return type
-		if(returnType !== '' && !validateType(returnType)) {
-			console.log("Invalid return type");
+		if (returnType && !validateType(returnType)) {
+			setReturnTypeError("Invalid return type");
 			return;
 		}
 
 		// Validate parameters
-		let validParameter = true;
-		parameters.forEach(obj => {
-			const type = obj.type;
-			const name = obj.name;
-
+		if (!parameters.every(({ type, name }) => {
 			// Allow excluding parameters
-			if(type === '' && name === '') {
-				return;
+			if (!type && !name) {
+				return true;
 			}
 
-			if(!validateParameter(type, name)) {
-				validParameter = false;
-			}
-		})
-
-		if(!validParameter) {
-			console.log("Invalid parameter");
+			return validateParameter(type, name);
+		})) {
+			setParametersError("One or more invalid parameters")
 			return;
 		}
 
-		// All checks passed, do a query
-		handleSearch();
+		// Validate modifiers
+		if(modifiers) {
+			for (let modifier of modifiers.split(",")) {
+				if (!validateModifier(modifier)) {
+					setModifiersError("One or more invalid modifiers");
+					return;
+				}
+			}
+		}
+
+		const queryString = generateQuery();
+		console.log(queryString);
+
+		const q = encodeURIComponent(queryString);
+		router.push(`/search?q=${q}`)
 	}
 
 	return (
@@ -154,8 +149,9 @@ export default function Home() {
 							label="Method name"
 							className={"w-full"}
 							value={methodName}
-							onChange={(e) => setMethodName(e.target.value)}
+							onChange={handleInputChange(setMethodName, setMethodNameError)}
 							placeholder="E.g. 'bubbleSort'"
+							errorMessage={methodNameError}
 						/>
 						<Input
 							label="Return type"
@@ -217,7 +213,7 @@ export default function Home() {
 					<Button
 						title="Search"
 						className="float-right"
-						onClick={search}
+						onClick={handleSearch}
 					/>
 				</div>
 			</div>
