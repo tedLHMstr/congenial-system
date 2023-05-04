@@ -14,6 +14,7 @@ class Elastic:
             "mappings": {
                 "properties": {
                     "url": {"type": "keyword"},
+                    "download_url": {"type": "keyword"},
                     "className": {"type": "keyword"},
                     "modifiers": {"type": "text"},
                     "methods": {
@@ -57,7 +58,8 @@ class Elastic:
     """
     def search(self, query):
         formatted_query = self.format_query(query)
-        response = self.es.search(index=self.elastic_index, query=formatted_query)
+        response = self.es.search(index=self.elastic_index, query=formatted_query, size=1000)
+        print("Response len: " + str(len(response['hits']['hits'])))
         return response
 
 
@@ -314,8 +316,9 @@ class Elastic:
 if __name__ == "__main__":
     e = Elastic("")
 
-    query =  "methodName:bubble_srot AND returnType:int[] AND parameters: arr,int AND modifiers: public"
+    query =  "methodName:mergeSort AND returnType:int[] AND parameters: arr,int AND modifiers: public"
     res = e.search(query)
+    print("Got %d Hits" % res['hits']['total']['value'])
     for hit in res["hits"]["hits"]:
         print("\n", hit["_score"])
         print(hit["_source"])

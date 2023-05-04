@@ -11,29 +11,34 @@ import { query } from '@/api/search'
 import { DocResult, Method, QueryResponse } from '@/types/Types.types';
 
 /* Display code */
-import { CopyBlock, solarizedDark, monoBlue, tomorrowNightBlue } from "react-code-blocks";
+import { CodeBlock, solarizedDark, monoBlue, tomorrowNightBlue } from "react-code-blocks";
 
 /* Icons */
 import { ArrowLeftIcon } from '@heroicons/react/20/solid';
 
+/* Components */
+import Button from '@/components/Button';
+
+/* Requests */
+import axios from "axios";
 
 function SearchResults() {
     const router = useRouter();
-    const { q } = router.query;
 
     const [loading, setLoading] = useState<boolean>(true);
     const [results, setResults] = useState<QueryResponse | null>();
     const [timeTaken, setTimeTaken] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [searchType, setSearchType] = useState<'class' | 'method'>();
+    const [methodName, setMethodName] = useState<string | null | undefined>();
+    const [numResults, setNumResults] = useState<number>(5);
 
     /* Get search results */
     useEffect(() => {
-        if (!q) {
-            setLoading(false);
-            return;
-        }
-        (async () => {
-            if (!results) {
+        const { q } = router.query;
+
+        if (q != undefined && loading) {
+            (async () => {
                 const startTime = performance.now();
                 try {
                     const response = await query(q as string);
@@ -41,12 +46,24 @@ function SearchResults() {
                 } catch (error) {
                     setError("Server is down, please try again later.");
                 }
+                const qry = decodeURIComponent(q as string)
+                const type = qry.split(':');
+                if (type[0] === 'methodName') {
+                    setSearchType('method');
+                    const name = type[1].split(' ')[0];
+                    setMethodName(name);
+                } else {
+                    setSearchType('class');
+                    setMethodName(null);
+                }
+
                 const endTime = performance.now();
                 setTimeTaken(endTime - startTime);
                 setLoading(false);
-            }
-        })();
-    }, [q, results]);
+            })();
+        }
+
+    }, [loading, router]);
 
     return (
         <main
@@ -54,32 +71,41 @@ function SearchResults() {
 		>
             <div className="h-screen w-full pattern-cross pattern-indigo-600 pattern-bg-primarybg pattern-size-8 pattern-opacity-10 fixed z-0"></div>
             
-            <div className='flex-col flex space-y-10 p-10 md:p-24 w-full items-center'>
+            <div className='flex-col flex space-y-10 p-5 md:p-24 w-full items-center z-10'>
                 
                 <h1 className={`text-6xl font-bold text-center rounded-xl px-4 py-1 text-gray-100`}>
 					Congenial System
-				</h1>
+                </h1>
+                
+                <div className='flex flex-row justify-between items-center md:items-end text-white z-10 w-full sm:w-3/4 md:w-2/3 lg:w-1/2'>
+                    <Link href='/' legacyBehavior>
+                        <a>
+                            <div className='flex flex-row items-center'>
+                                <ArrowLeftIcon className='inline-block w-6 h-6 mr-2' />
+                                <h1 className='text-sm md:text-xl font-bold'>Back to search</h1>
+                            </div>
+                        </a>
+                    </Link>
+                    {results && <p className='text-xs md:text-sm italic'> Found {results.hits.total.value} results in {(timeTaken / 1000).toFixed(3)} seconds </p>}
+                </div>
 
                 {loading ? (
                     <div className='text-white'> Loading... </div>
-                ) : results && results.hits.hits.length > 0 ? (
-                        <div className='text-white space-y-4 w-full sm:w-3/4 md:w-2/3 lg:w-1/2 z-10'>
-                            <div className='flex flex-row justify-between items-end'>
-                                <Link href='/' legacyBehavior>
-                                    <a>
-                                        <div className='flex flex-row items-center'>
-                                            <ArrowLeftIcon className='inline-block w-6 h-6 mr-2' />
-                                            <h1 className='text-xl font-bold'>Back to search</h1>
-                                        </div>
-                                    </a>
-                                </Link>
-                                <p className='text-sm italic'> Found {results.hits.total.value} results in {(timeTaken / 1000).toFixed(3)} seconds </p>
-                            </div>
-                            {results.hits.hits.map((result: DocResult) => {
+                ) : results && results.hits.hits.length > 0 && methodName != undefined && searchType ? (
+                        <div className='text-white space-y-4 w-full sm:w-3/4 md:w-2/3 lg:w-1/2'>
+                            {results.hits.hits.slice(0, numResults).map((result: DocResult) => {
                                 return (
-                                    <ResultCard key={result._id} res={result} />
+                                    <ResultCard key={result._id} res={result} searchType={searchType} methodName={methodName}/>
                                 )
                             })}
+                            {numResults < results.hits.hits.length && (
+                                <Button
+                                    title='Show more results'
+                                    className='w-full'
+                                    onClick={() => setNumResults(numResults + 5)}
+                                />
+                            )}
+
                         </div>
                     ) : 
                         !error ?
@@ -94,82 +120,78 @@ function SearchResults() {
     );
 }
 
-function ResultCard({ res }: { res: DocResult }) {
-
-    const code = `package com.company;
-
-    import java.util.Arrays;
-    import java.util.Random;
-
-        public class Main {
-	
-
-	private static ArrayList<HashMap<ArrayList<Integer>, Person>> makeArr(int l, HashMap<Integer, String> map) {
-		int[] result = new int[l];
-		
-		for(int i = 0; i < l; i++) {
-			result[i] = (int)(Math.random()*100000);
-			
-		}
-			
-		return result;
-		
-		
-	}
-	
-
-}
-    `;
+function ResultCard({ res, searchType, methodName }: { res: DocResult, searchType: 'class' | 'method', methodName: string | null }) {
 
     const [codePreview, setCodePreview] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(true);
+    const [methodLine, setMethodLine] = useState<number | null>(null);
 
     useEffect(() => {
-        // get code from url
-        const codePrev = extractLines(code, res._source.line, res._source.line + 4);
-        setCodePreview(codePrev);
+        if (!res) return;
+        (async () => {
+            try {
+                const code = await fetchCode(res._source.download_url);
+                let codePrev = extractLines(code, res._source.line - 1, 2);
+                if (searchType === 'method') {
+                    // Find line for methodName in res._source.methods    
+                    const method = res._source.methods.find((method: Method) => method.methodName.toLowerCase() === methodName?.toLowerCase());
+                    const line = method?.line;
 
-    }, [code, res])
+                    if (line) {
+                        setMethodLine(line);
+                        const methodCodePrev = extractLines(code, line - 1);
+                        codePrev += '\n···' + `\n${methodCodePrev}`;
+                    }
+                }
 
+                setCodePreview(codePrev);
+            } catch (error) {
+                console.log(error);
+            }
+            setLoading(false);
+        })();
+    }, [res, searchType, methodName])
+
+    async function fetchCode(url: string): Promise<any> {
+        const response = await axios.get<any>(url);
+        return response.data;
+    }
+
+    /* Extract lines for preview of code */
+    function extractLines(codeStr: string, startLine: number, nLines: number = 5) {
+        const lines = codeStr.split('\n');
+        const startIndex = startLine;
+        const endIndex = startIndex + nLines;
+        return lines.slice(startIndex, endIndex).join('\n');
+    }
 
 
     return (
-        <a href={res._source.url} target="_blank" rel="noreferrer" className='block'>
+        <a href={res._source.url} target="_blank" rel="noreferrer" className='block relative'>
             <div
                 className='text-white text-sm border-[1px] border-indigo-600 rounded-lg p-6 bg-[#1c2943] transition transform ease-in-out duration-500 hover:scale-[1.03] cursor-pointer hover:ring-1 hover:ring-indigo-600 hover:outline-none'
             >
                 <div className='mb-4 text-white'>
-                    <h4 className='font-bold text-sm underline mb-2'>ClassName: {res._source.className} </h4>
+                    <div className='flex flex-row justify-between items-end'>
+                        <h4 className='font-bold text-sm underline mb-2'>ClassName: {res._source.className} </h4>
+                        <h4 className='text-xs font-thin'>Score: {res._score} </h4>
+                    </div>
                     <h4 className='text-xs'>Modifiers: {res._source.modifiers} </h4>
-                    <h4 className='text-xs'>URL: {res._source.url} </h4>
+                    <h4 className='text-xs font-thin truncate'>URL: {res._source.url} </h4>
                 </div>
-                <CopyBlock
+                <CodeBlock
                     language={'java'}
                     text={codePreview}
-                    showLineNumbers={true}
+                    showLineNumbers={false}
                     theme={tomorrowNightBlue}
                     wrapLines={false}
-                    startingLineNumber={res._source.line+1}
+                    startingLineNumber={res._source.line + 1}
                     codeBlock
-                    highlight={'1'}
+                    highlight={methodLine ? '1,4' : '1'}
                 />
             </div>
         </a>
     )
-}
-        
-/* Extract lines for preview of code */
-function extractLines(codeStr: string, startLine: number, endLine: number) {
-    // split the string into lines
-    const lines = codeStr.split('\n');
-    
-    // get the starting and ending indices of the lines we want to extract
-    const startIndex = startLine;
-    const endIndex = Math.min(endLine, lines.length);
-    
-    // join the selected lines into a new string
-    const selectedLines = lines.slice(startIndex, endIndex).join('\n');
-    
-    return selectedLines;
 }
 
 export default SearchResults;

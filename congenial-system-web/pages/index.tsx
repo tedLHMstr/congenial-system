@@ -53,8 +53,14 @@ export default function Home() {
 		// Construct modifiers part
 		const modifiersPart = modifiers.replaceAll(',', '-');
 
+		let queryString;
+
 		// Construct query string
-		let queryString = `methodName:${methodName}`;
+		if (searchType.value === 'method') {
+			queryString = `methodName:${methodName}`;
+		} else {
+			queryString = `className:${methodName}`;
+		}
 
 		if (returnType) {
 			queryString += ` ${searchType.value === 'method' ? methodParamOperator.value : 'OR'} returnType:${returnType}`;
@@ -85,16 +91,16 @@ export default function Home() {
 
 	const handleSearch = () => {
 			// Validate method name
-		if (!validateName(methodName)) {
-			setMethodNameError("Invalid method name");
-			return;
-		}
+		// if (!validateName(methodName)) {
+		// 	setMethodNameError("Invalid method name");
+		// 	return;
+		// }
 
 		// Validate return type. Allow excluding return type
-		if (returnType && !validateType(returnType)) {
-			setReturnTypeError("Invalid return type");
-			return;
-		}
+		// if (returnType && !validateType(returnType)) {
+		// 	setReturnTypeError("Invalid return type");
+		// 	return;
+		// }
 
 		// Validate parameters
 		if (!parameters.every(({ type, name }) => {
@@ -132,7 +138,7 @@ export default function Home() {
 		>
 			<div className="h-screen w-full pattern-cross pattern-indigo-600 pattern-bg-primarybg pattern-size-8 pattern-opacity-10 fixed"></div>
 
-			<div className='flex-col flex space-y-10 p-10 md:p-24 w-full items-center'>
+			<div className='flex-col flex space-y-10 p-5 md:p-24 w-full items-center'>
 				<h1 className={`text-6xl font-bold text-center rounded-xl px-4 py-1 text-gray-100`}>
 					Congenial System
 				</h1>
@@ -146,11 +152,11 @@ export default function Home() {
 					/>
 					<div className='grid sm:grid-cols-1 md:grid-cols-3 gap-5 items-end'>
 						<Input
-							label="Method name"
+							label={searchType.value === 'method' ? "Method name" : "Class name"}
 							className={"w-full"}
 							value={methodName}
 							onChange={handleInputChange(setMethodName, setMethodNameError)}
-							placeholder="E.g. 'bubbleSort'"
+							placeholder={searchType.value === 'method' ? "E.g. 'bubbleSort'" : "E.g. 'ChessBoard'"}
 							errorMessage={methodNameError}
 						/>
 						<Input
@@ -159,7 +165,8 @@ export default function Home() {
 							value={returnType}
 							onChange={(e) => setReturnType(e.target.value)}
 							placeholder="E.g. 'int[]'"
-							/>
+							errorMessage={returnTypeError}
+						/>
 						{searchType.value === 'method' && <Dropdown
 							label={"Operator between method name and return type(s)"}
 							selected={methodParamOperator}
@@ -173,6 +180,7 @@ export default function Home() {
 							value={modifiers}
 							onChange={(e) => setModifiers(e.target.value)}
 							placeholder="E.g. 'public,static, ...'"
+							errorMessage={modifiersError}
 						/>
 
 					</div>

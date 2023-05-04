@@ -14,6 +14,7 @@ export type DocResult = {
     _id: string,
     _source: {
         url: string,
+        download_url: string,
         className: string,
         line: number,
         modifiers: string[],

@@ -64,7 +64,7 @@ class Crawler:
             if content.type == "dir":
                 contents.extend(repo.get_contents(content.path))
             elif content.type == "file" and content.name.endswith(".java"):
-                java_files.append({'code': content, 'url': content.html_url})
+                java_files.append({'code': content, 'url': content.html_url, 'download_url': content.download_url})
 
         return java_files
 
