@@ -149,7 +149,7 @@ export default function Home() {
 						alts={[{ name: "Method", value: "method" }, { name: "Class", value: "class" }]}
 						className={""}
 					/>
-					<div className='grid sm:grid-cols-1 md:grid-cols-3 gap-5'>
+					<div className='grid sm:grid-cols-1 md:grid-cols-3 gap-5 items-end'>
 						<Input
 							label="Method name"
 							className={"w-full"}
@@ -157,33 +157,28 @@ export default function Home() {
 							onChange={(e) => setMethodName(e.target.value)}
 							placeholder="E.g. 'bubbleSort'"
 						/>
-						<div style={{ display: 'flex' }}>
-							<Input
-								label="Return type"
-								className={"w-full"}
-								value={returnType}
-								onChange={(e) => setReturnType(e.target.value)}
-								placeholder="E.g. 'int[]'"
+						<Input
+							label="Return type"
+							className={"w-full"}
+							value={returnType}
+							onChange={(e) => setReturnType(e.target.value)}
+							placeholder="E.g. 'int[]'"
 							/>
-						</div>
-						<div style={{ display: 'flex' }}>
-							{searchType.value === 'method' && <Dropdown
-								label={"Operator between method name and return type(s)"}
-								selected={methodParamOperator}
-								setSelected={setMethodParamOperator}
-								alts={[{ name: "OR", value: "OR" }, { name: "AND", value: "AND" }]}
-								className={"w-full"}
-							/>}
-						</div>
-						<div style={{ display: 'flex' }}>
-							<Input
-								label="Modifiers (comma separated)"
-								className={"w-full"}
-								value={modifiers}
-								onChange={(e) => setModifiers(e.target.value)}
-								placeholder="E.g. 'public,static, ...'"
-							/>
-						</div>
+						{searchType.value === 'method' && <Dropdown
+							label={"Operator between method name and return type(s)"}
+							selected={methodParamOperator}
+							setSelected={setMethodParamOperator}
+							alts={[{ name: "OR", value: "OR" }, { name: "AND", value: "AND" }]}
+							className={"w-full"}
+						/>}
+						<Input
+							label="Modifiers (comma separated)"
+							className={"w-full"}
+							value={modifiers}
+							onChange={(e) => setModifiers(e.target.value)}
+							placeholder="E.g. 'public,static, ...'"
+						/>
+
 					</div>
 					{searchType.value == 'class' && (
 						<h1 className='text-md font-semibold text-white'>{searchType.name}</h1>

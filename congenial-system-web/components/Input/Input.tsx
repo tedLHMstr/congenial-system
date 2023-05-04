@@ -22,7 +22,7 @@ function Input(props: InputProps) {
                 placeholder={props.placeholder}
                 className={
                     classNames(
-                        "flex-1 block text-sm rounded px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition transform ease-in-out duration-500 bg-[#1c2943] text-white border-[1px] border-indigo-600",
+                        "block text-sm rounded px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition transform ease-in-out duration-500 bg-[#1c2943] text-white border-[1px] border-indigo-600",
                         props.className
                     )
                 }
