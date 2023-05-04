@@ -19,6 +19,21 @@ const validTypes = [
   "Object[]"
 ];
 
+const validModifiers = [
+    "public",
+    "private",
+    "protected",
+    "static",
+    "final",
+    "synchronized",
+    "abstract",
+    "default"
+]
+
+export function validateModifier(modifier: string): boolean {
+    return validModifiers.includes(modifier);
+}
+
 export function validateName(name: string): boolean {
     // Do not allow making a query without a methodname
     const regex = /^[a-zA-Z0-9]+$/;
