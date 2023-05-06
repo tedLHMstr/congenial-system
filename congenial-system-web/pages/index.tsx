@@ -45,13 +45,14 @@ export default function Home() {
 
 	const generateQuery = () => {
 		// Construct parameter part
-		const parameterPart = parameters
-			.filter(obj => obj.name && obj.type)
-			.map(obj => `${obj.name},${obj.type}`)
-			.join('-');
+		const parameterPart = parameters.map(({ type, name }) => {
+			if (type != '' && name != '') {
+				return `${name}\$${type}`;
+			}
+		}).join(',');
 
-		// Construct modifiers part
-		const modifiersPart = modifiers.replaceAll(',', '-');
+		// strip spaces from modifiers
+		const modifiersPart = modifiers ? modifiers.replace(/\s/g, '') : '';
 
 		let queryString;
 
@@ -63,15 +64,15 @@ export default function Home() {
 		}
 
 		if (returnType) {
-			queryString += ` ${searchType.value === 'method' ? methodParamOperator.value : 'OR'} returnType:${returnType}`;
+			queryString += `;returnType:${returnType}`;
 		}
 
 		if (parameterPart) {
-			queryString += ` AND parameters:${parameterPart}`;
+			queryString += `;parameters:${parameterPart}`;
 		}
 
 		if (modifiersPart) {
-			queryString += ` AND modifiers:${modifiersPart}`;
+			queryString += `;modifiers:${modifiersPart}`;
 		}
 
 		return queryString;
@@ -103,30 +104,31 @@ export default function Home() {
 		// }
 
 		// Validate parameters
-		if (!parameters.every(({ type, name }) => {
-			// Allow excluding parameters
-			if (!type && !name) {
-				return true;
-			}
+		// if (!parameters.every(({ type, name }) => {
+		// 	// Allow excluding parameters
+		// 	if (!type && !name) {
+		// 		return true;
+		// 	}
 
-			return validateParameter(type, name);
-		})) {
-			setParametersError("One or more invalid parameters")
-			return;
-		}
+		// 	return validateParameter(type, name);
+		// })) {
+		// 	setParametersError("One or more invalid parameters")
+		// 	return;
+		// }
 
 		// Validate modifiers
-		if(modifiers) {
-			for (let modifier of modifiers.split(",")) {
-				if (!validateModifier(modifier)) {
-					setModifiersError("One or more invalid modifiers");
-					return;
-				}
-			}
-		}
+		// if(modifiers) {
+		// 	for (let modifier of modifiers.split(",")) {
+		// 		if (!validateModifier(modifier)) {
+		// 			setModifiersError("One or more invalid modifiers");
+		// 			return;
+		// 		}
+		// 	}
+		// }
 
 		const queryString = generateQuery();
-		console.log(queryString);
+
+		console.log(queryString)
 
 		const q = encodeURIComponent(queryString);
 		router.push(`/search?q=${q}`)
@@ -150,7 +152,7 @@ export default function Home() {
 						alts={[{ name: "Method", value: "method" }, { name: "Class", value: "class" }]}
 						className={""}
 					/>
-					<div className='grid sm:grid-cols-1 md:grid-cols-3 gap-5 items-end'>
+					<div className='grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-end'>
 						<Input
 							label={searchType.value === 'method' ? "Method name" : "Class name"}
 							className={"w-full"}
@@ -167,13 +169,6 @@ export default function Home() {
 							placeholder="E.g. 'int[]'"
 							errorMessage={returnTypeError}
 						/>
-						{searchType.value === 'method' && <Dropdown
-							label={"Operator between method name and return type(s)"}
-							selected={methodParamOperator}
-							setSelected={setMethodParamOperator}
-							alts={[{ name: "OR", value: "OR" }, { name: "AND", value: "AND" }]}
-							className={"w-full"}
-						/>}
 						<Input
 							label="Modifiers (comma separated)"
 							className={"w-full"}

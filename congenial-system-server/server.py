@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from Indexer.Elasticsearch import Elastic
+from Indexer.Searcher import ElasticIndexer
 
-es = Elastic("")
+# es = Elastic("")
+indexer = ElasticIndexer('')
 
 app = FastAPI()
 
@@ -20,10 +22,21 @@ app.add_middleware(
 def read_root():
     return {"Congenial System API": "Running"}
 
-@app.get("/search")
-async def search(query: str):
-    res = es.search(query)
-    return res
+@app.get("/searchMethod")
+async def searchMethods(query: str):
+    try: 
+        res = indexer.searchMethods(indexName='java_method_index', query=query)
+        return res
+    except:
+        return
+
+@app.get("/searchClass")
+async def searchClasses(query: str):
+    try:
+        res = indexer.searchClasses(indexName='java_class_index', query=query)
+        return res
+    except:
+        return
 
 if __name__ == "__main__":
     import uvicorn
