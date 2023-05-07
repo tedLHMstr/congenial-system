@@ -89,7 +89,7 @@ class ElasticIndexer:
         # Add methods term query
         if 'methods' in query_dict and len(query_dict['methods']) > 0:
             for method in query_dict['methods']:
-                method_query = Q('term', modifiers={'value': method, 'boost': 0.7})
+                method_query = Q('term', methods={'value': method, 'boost': 0.7})
                 should_list.append(method_query)
 
         # Add modifiers term queries
@@ -102,7 +102,7 @@ class ElasticIndexer:
         if len(must_list) > 0:
             query = query.query('bool', must=must_list, should=should_list)
         else:
-            query = query.query('bool', should=should_list, minimum_should_match=-1)
+            query = query.query('bool', should=should_list)
 
         return query.to_dict()
 

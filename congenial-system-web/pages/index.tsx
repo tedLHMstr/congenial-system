@@ -17,6 +17,9 @@ import { query } from '@/api/search'
 /* Next router */
 import { useRouter } from 'next/router'
 
+/* Icons */
+import { PlusCircleIcon } from '@heroicons/react/20/solid';
+
 export default function Home() {
 	const router = useRouter()
 
@@ -46,8 +49,14 @@ export default function Home() {
 	const generateQuery = () => {
 		// Construct parameter part
 		const parameterPart = parameters.map(({ type, name }) => {
-			if (type != '' && name != '') {
-				return `${name}\$${type}`;
+			if (searchType.value === 'method') {
+				if (type != '' && name != '') {
+					return `${name}\$${type}`;
+				}
+			} else {
+				if (name != '') {
+					return `${name}`;
+				}
 			}
 		}).join(',');
 
@@ -68,7 +77,11 @@ export default function Home() {
 		}
 
 		if (parameterPart) {
-			queryString += `;parameters:${parameterPart}`;
+			if (searchType.value === 'method') {
+				queryString += `;parameters:${parameterPart}`;
+			} else {
+				queryString += `;methods:${parameterPart}`;
+			}
 		}
 
 		if (modifiersPart) {
@@ -128,8 +141,6 @@ export default function Home() {
 
 		const queryString = generateQuery();
 
-		console.log(queryString)
-
 		const q = encodeURIComponent(queryString);
 		router.push(`/search?q=${q}`)
 	}
@@ -145,71 +156,79 @@ export default function Home() {
 					Congenial System
 				</h1>
 				<div className='sm:w-full md:w-2/3 xl:w-1/2 space-y-5'>
-					<Dropdown
-						label={"Search type"}
-						selected={searchType}
-						setSelected={setSearchType}
-						alts={[{ name: "Method", value: "method" }, { name: "Class", value: "class" }]}
-						className={""}
-					/>
-					<div className='grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-end'>
-						<Input
-							label={searchType.value === 'method' ? "Method name" : "Class name"}
-							className={"w-full"}
-							value={methodName}
-							onChange={handleInputChange(setMethodName, setMethodNameError)}
-							placeholder={searchType.value === 'method' ? "E.g. 'bubbleSort'" : "E.g. 'ChessBoard'"}
-							errorMessage={methodNameError}
-						/>
-						<Input
-							label="Return type"
-							className={"w-full"}
-							value={returnType}
-							onChange={(e) => setReturnType(e.target.value)}
-							placeholder="E.g. 'int[]'"
-							errorMessage={returnTypeError}
-						/>
-						<Input
-							label="Modifiers (comma separated)"
-							className={"w-full"}
-							value={modifiers}
-							onChange={(e) => setModifiers(e.target.value)}
-							placeholder="E.g. 'public,static, ...'"
-							errorMessage={modifiersError}
-						/>
-
+					<div className='grid grid-cols-2 lg:grid-cols-4 gap-5 items-end'>
+						<div className='col-span-1 lg:col-span-1'>
+							<Dropdown
+								label={"Search type"}
+								selected={searchType}
+								setSelected={setSearchType}
+								alts={[{ name: "Method", value: "method" }, { name: "Class", value: "class" }]}
+								className={""}
+							/>
+						</div>
+						<div className='col-span-2 lg:col-span-3'>
+							<Input
+								label={searchType.value === 'method' ? "Method name" : "Class name"}
+								className={""}
+								value={methodName}
+								onChange={handleInputChange(setMethodName, setMethodNameError)}
+								placeholder={searchType.value === 'method' ? "E.g. 'bubbleSort'" : "E.g. 'ChessBoard'"}
+								errorMessage={methodNameError}
+							/>
+						</div>
+						{searchType.value === 'method' &&
+							<div className='col-span-2'>
+								<Input
+									label="Return type"
+									className={"w-full"}
+									value={returnType}
+									onChange={(e) => setReturnType(e.target.value)}
+									placeholder="E.g. 'int[]'"
+									errorMessage={returnTypeError}
+								/>
+							</div>
+						}
+						<div className='col-span-2'>
+							<Input
+								label="Modifiers (comma separated)"
+								className={"w-full"}
+								value={modifiers}
+								onChange={(e) => setModifiers(e.target.value)}
+								placeholder="E.g. 'public,static, ...'"
+								errorMessage={modifiersError}
+							/>
+						</div>
 					</div>
-					{searchType.value == 'class' && (
-						<h1 className='text-md font-semibold text-white'>{searchType.name}</h1>
-					)	
-					}
-					<h3 className='text-md font-semibold text-white'>Parameters</h3>
+					<h3 className='text-md font-semibold text-white'>{searchType.value === 'method' ? 'Parameters' : 'Methods'}</h3>
 					<div className='w-full space-y-5'>
 						{Array.from({ length: parameters.length }, (_, i) => i).map((i) => {
 							return (
 								<div key={i} className='space-y-1'>
-							<h3 className='text-xs font-medium text-white'>Parameter {i+1}</h3>
+							<h3 className='text-xs font-medium text-white'>{searchType.value === 'method' ? `Parameter ${i+1}` : `Method ${i+1}`}</h3>
 							<div className='grid grid-cols-2 gap-6'>
 								<Input
 									className={"w-full"}
 									value={parameters[i]?.name}
 									onChange={(e) => updateParameterName(i, e.target.value)}
-									placeholder="Parameter name"
+									placeholder={searchType.value === 'method' ? "Parameter name" : "Method name"}
 								/>
-								<Input
+								{searchType.value === 'method' && 
+									<Input
 									className={"w-full"}
 									value={parameters[i]?.type}
 									onChange={(e) => updateParameterType(i, e.target.value)}
 									placeholder="Parameter type"
-								/>
+									/>
+								}
 							</div>
 						</div>
 							)
 						})}
 						<Button
-							title="+ Add parameter"
+							title={searchType.value === 'method' ? "Add parameter" : "Add method"}
 							className="w-full bg-transparent border-dashed hover:ring-0 hover:bg-white/5"
 							onClick={() => setParameters([...parameters, { name: '', type: '' }])}
+							icon={<PlusCircleIcon className="w-5 h-5 mr-2" />}
 						/>
 					</div>
 					

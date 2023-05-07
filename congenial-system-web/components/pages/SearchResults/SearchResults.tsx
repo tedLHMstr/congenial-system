@@ -23,6 +23,7 @@ import { Transition } from '@headlessui/react'
 
 /* Requests */
 import axios from "axios";
+import classNames from 'classnames';
 
 
 function SearchResults() {
@@ -43,13 +44,13 @@ function SearchResults() {
         if (q != undefined && loading) {
             (async () => {
                 const qry = decodeURIComponent(q as string)
-                const type = qry.split(':');
-                setSearchType(type[0] === 'methodName' ? 'method' : 'class');
+                const type = qry.split(':')[0];
+                setSearchType(type === 'methodName' ? 'method' : 'class');
 
                 const startTime = performance.now();
                 try {
                     let response;
-                    if (type[0] === 'methodName') {
+                    if (type === 'methodName') {
                         response = await queryMethod(q as string);
                     } else {
                         response = await queryClass(q as string);
@@ -199,7 +200,12 @@ function ResultCard({ res, searchType }: { res: DocResult, searchType: 'class' |
         >
         <a href={res._source.url} target="_blank" rel="noreferrer" className='block relative'>
             <div
-                className='text-white text-sm border-[1px] border-indigo-600 rounded-lg p-6 bg-[#1c2943] transition transform ease-in-out duration-500 hover:scale-[1.03] cursor-pointer hover:ring-1 hover:ring-indigo-600 hover:outline-none content-center'
+                    className={
+                        classNames(
+                            'text-white text-sm border-[1px] border-indigo-600 rounded-lg p-6 bg-[#1c2943] transition transform ease-in-out duration-500 cursor-pointer hover:ring-1 hover:ring-indigo-600 hover:outline-none content-center',
+                            !codeExpanded && 'hover:scale-[1.03]',
+                        )
+                    }
             >
                 <div className='mb-4 text-white'>
                     <div className='flex flex-row justify-between items-end'>

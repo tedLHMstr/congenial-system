@@ -4,7 +4,7 @@ from Crawler.Crawler import Crawler
 import os
 from dotenv import load_dotenv
 
-def enrich_index(GITHUB_ACCESS_TOKEN: str, es: ElasticIndexer, indexName: str):
+def enrich_index(GITHUB_ACCESS_TOKEN: str, es: ElasticIndexer, methodIndexName: str, classIndexName: str):
     """
     Enrich the index with the data from crawling + parsing
     """
@@ -35,12 +35,24 @@ def enrich_index(GITHUB_ACCESS_TOKEN: str, es: ElasticIndexer, indexName: str):
                     continue
                 else: 
                     for class_ in parsed_java_file["classes"]:
+                        class_doc = {
+                            "className": class_["className"],
+                            "modifiers": class_["modifiers"],
+                            "methods": [],
+                            "url": java_file['url'],
+                            "download_url": java_file['download_url'],
+                            "line": class_["line"]
+                        }
+
                         for method in class_["methods"]:
                             es_doc = method
                             es_doc["url"] = java_file['url']
                             es_doc["download_url"] = java_file['download_url']
+                            class_doc["methods"].append(method["methodName"])
                     
-                            es.index(indexName=indexName, doc=es_doc)
+                            es.index(indexName=methodIndexName, doc=es_doc)
+
+                        es.index(indexName=classIndexName, doc=class_doc)
             
     print("Done indexing")
 
@@ -84,10 +96,34 @@ if __name__ == "__main__":
         }
     }
     
+    classIndexMapping = {
+        "mappings": {
+            "properties": {
+            "className": {
+                "type": "keyword"
+            },
+            "modifiers": {
+                "type": "keyword"
+            },
+            "line": {
+                "type": "integer"
+            },
+            "url": {
+                "type": "keyword"
+            },
+            "download_url": {
+                "type": "keyword"
+            },
+            "methods": {
+                "type": "keyword"
+            }
+            }
+        }
+    }
+
     indexer = ElasticIndexer('password')
+
     indexer.create_index('java_method_index', methodIndexMapping)
+    indexer.create_index('java_class_index', classIndexMapping)
 
-    # crawler = Crawler("java", access_token=GITHUB_ACCESS_TOKEN)
-    # repos = crawler.search_repos("created:2021-01-01..2021-01-02 stars:>10 language:Java")
-
-    enrich_index(GITHUB_ACCESS_TOKEN, indexer, 'java_method_index')
+    enrich_index(GITHUB_ACCESS_TOKEN, indexer, 'java_method_index', 'java_class_index')
