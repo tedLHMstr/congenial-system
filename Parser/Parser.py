@@ -30,8 +30,11 @@ class CodeParser:
     def parseFile(self, code: str) -> object:
         res = {}
 
-        tree = javalang.parse.parse(code)
-
+        try:
+            tree = javalang.parse.parse(code)
+        except:
+            return
+        
         res["classes"] = []
 
         for type_ in tree.types:
@@ -44,7 +47,7 @@ class CodeParser:
             for method in type_.methods:
 
                 class_["methods"].append({
-                    "name": method.name,
+                    "methodName": method.name,
                     "modifiers": [modifier for modifier in method.modifiers],
                     "returnType": self.concatenate_type(self.getType(method.return_type)) if method.return_type else "void",
                     "parameters": [{"name": param.name, "type": self.concatenate_type(self.getType(param.type))} for param in method.parameters], 
