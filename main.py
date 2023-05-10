@@ -4,26 +4,19 @@ from Crawler.Crawler import Crawler
 import os
 from dotenv import load_dotenv
 
-def enrich_index(GITHUB_ACCESS_TOKEN: str, es: ElasticIndexer, methodIndexName: str, classIndexName: str):
+def enrich_index(GITHUB_ACCESS_TOKEN: str, es: ElasticIndexer, methodIndexName: str, classIndexName: str, dateRanges: list, keyword:str=None):
     """
     Enrich the index with the data from crawling + parsing
     """
     parser = CodeParser("java")
     crawler = Crawler("java", access_token=GITHUB_ACCESS_TOKEN)
 
-    dateRanges = [
-        "2021-02-01..2021-02-28",
-        # "2021-01-16..2021-01-31",
-        # "2021-02-01..2021-02-15",
-        # "2021-02-16..2021-02-28",
-    ]
-
     filesIndexed = 0
 
     # Search repos within the specified date range
     for dateRange in dateRanges:
  
-        query = f"created:{dateRange} language:Java depth-first"
+        query = f"created:{dateRange} language:Java" + " " + keyword
         repos = crawler.search_repos(query)
         print(repos.totalCount)
 
@@ -130,4 +123,11 @@ if __name__ == "__main__":
     indexer.create_index('java_method_index', methodIndexMapping)
     indexer.create_index('java_class_index', classIndexMapping)
 
-    enrich_index(GITHUB_ACCESS_TOKEN, indexer, 'java_method_index', 'java_class_index')
+    dateRanges = [
+        "2021-02-01..2021-02-28",
+        # "2021-01-16..2021-01-31",
+        # "2021-02-01..2021-02-15",
+        # "2021-02-16..2021-02-28",
+    ]
+
+    enrich_index(GITHUB_ACCESS_TOKEN, indexer, 'java_method_index', 'java_class_index', dateRanges, keyword="spring")
