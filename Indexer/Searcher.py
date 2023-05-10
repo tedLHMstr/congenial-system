@@ -32,12 +32,16 @@ class ElasticIndexer:
 
         # Add methodName fuzzy query
         if 'methodName' in query_dict:
-            method_name_query = Q('fuzzy', methodName={'value': query_dict['methodName'], 'fuzziness': 'AUTO', 'max_expansions': 50, 'prefix_length': 0, 'transpositions': True, 'rewrite': 'constant_score', 'boost': 4})
+            method_name_prefix_query = Q('prefix', methodName=query_dict['methodName'])
+            method_name_fuzzy_query = Q('fuzzy', methodName={'value': query_dict['methodName'], 'fuzziness': 'AUTO', 'transpositions': True})
+            method_name_exact_query = Q('term', methodName={'value': query_dict['methodName'], 'boost': 2})
+            method_name_query = Q('bool', should=[method_name_prefix_query, method_name_fuzzy_query, method_name_exact_query], boost=2.0)
             must_list.append(method_name_query)
+
             
         # Add returnType term query
         if 'returnType' in query_dict:
-            return_type_query = Q('term', returnType={'value': query_dict['returnType'], 'boost': 2})
+            return_type_query = Q('term', returnType={'value': query_dict['returnType'], 'boost': 1})
             should_list.append(return_type_query)
 
         if 'parameters' in query_dict and len(query_dict['parameters']) > 0:
@@ -54,15 +58,18 @@ class ElasticIndexer:
 
         if 'modifiers' in query_dict and len(query_dict['modifiers']) > 0:
             # Add modifiers term queries
+            modifier_should_list = []
             for modifier in query_dict['modifiers']:
-                modifier_query = Q('term', modifiers={'value': modifier, 'boost': 0.7})
-                should_list.append(modifier_query)
+                modifier_query = Q('term', modifiers={'value': modifier})
+                modifier_should_list.append(modifier_query)
+            mod_q = Q('bool', should=modifier_should_list, minimum_should_match=len(query_dict['modifiers']), boost=2)
+            should_list.append(mod_q)
 
         # Add must and should clauses to main query
         if len(must_list) > 0:
             query = query.query('bool', must=must_list, should=should_list)
         else:
-            query = query.query('bool', should=should_list, minimum_should_match=-1)
+            query = query.query('bool', should=should_list, minimum_should_match=len(should_list))
 
         return query.to_dict()
     
@@ -83,7 +90,9 @@ class ElasticIndexer:
 
         # Add className fuzzy query
         if 'className' in query_dict:
-            class_name_query = Q('fuzzy', className={'value': query_dict['className'], 'fuzziness': 'AUTO', 'max_expansions': 50, 'prefix_length': 0, 'transpositions': True, 'rewrite': 'constant_score', 'boost': 4})
+            class_name_fuzzy_query = Q('fuzzy', className={'value': query_dict['className'], 'fuzziness': 'AUTO', 'max_expansions': 50, 'prefix_length': 0, 'transpositions': True, 'rewrite': 'constant_score', 'boost': 4})
+            class_name_prefix_query = Q('prefix', className=query_dict['className'])
+            class_name_query = Q('bool', should=[class_name_fuzzy_query, class_name_prefix_query])
             must_list.append(class_name_query)
 
         # Add methods term query
@@ -108,6 +117,7 @@ class ElasticIndexer:
 
     def searchMethods(self, indexName, query):
         q = self.buildMethodQuery(query)
+        print(q)
         return self.es.search(index=indexName, body=q, size=100)
 
     def searchClasses(self, indexName, query):
@@ -136,7 +146,7 @@ if __name__ == '__main__':
         "mappings": {
             "properties": {
             "methodName": {
-                "type": "text"
+                "type": "keyword"
             },
             "modifiers": {
                 "type": "text"

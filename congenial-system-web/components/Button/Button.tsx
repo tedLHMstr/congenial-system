@@ -14,9 +14,8 @@ function Button({title, className, onClick, naked=false, icon, ...rest}: ButtonP
         <button
             className={
                 classNames(
-                    "text-sm font-light text-white rounded px-4 py-2 transition transform ease-in-out duration-500 flex flex-1 items-center justify-center",
-                    !naked && "hover:ring-2 hover:ring-indigo-600 hover:outline-none bg-[#1c2943] border-[1px] border-indigo-600",
-                    naked && "hover:opacity-70",
+                    "text-sm font-normal text-white rounded px-4 py-2 transition transform ease-in-out duration-500 flex flex-1 items-center justify-center hover:scale-[1.03]",
+                    !naked && "bg-gradient-to-r from-[#b84cc3] via-[#5932a6] to-[#4621db] border-[1px] border-indigo-600",
                     className
                 )
             }

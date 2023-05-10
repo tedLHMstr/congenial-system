@@ -12,19 +12,22 @@ def enrich_index(GITHUB_ACCESS_TOKEN: str, es: ElasticIndexer, methodIndexName: 
     crawler = Crawler("java", access_token=GITHUB_ACCESS_TOKEN)
 
     dateRanges = [
-        "2023-01-01..2023-01-10",
+        "2021-02-01..2021-02-28",
         # "2021-01-16..2021-01-31",
         # "2021-02-01..2021-02-15",
         # "2021-02-16..2021-02-28",
     ]
 
+    filesIndexed = 0
+
     # Search repos within the specified date range
     for dateRange in dateRanges:
-        query = f"created:{dateRange} language:Java sort"
+ 
+        query = f"created:{dateRange} language:Java depth-first"
         repos = crawler.search_repos(query)
         print(repos.totalCount)
 
-        for repo in repos:
+        for repo in repos[0:100]:
             print("Processing repo: ", repo.name)
             java_files = crawler.get_java_files(repo)
             print("Repo: ", repo.name, "contains", len(java_files), "java files")
@@ -53,8 +56,9 @@ def enrich_index(GITHUB_ACCESS_TOKEN: str, es: ElasticIndexer, methodIndexName: 
                             es.index(indexName=methodIndexName, doc=es_doc)
 
                         es.index(indexName=classIndexName, doc=class_doc)
-            
-    print("Done indexing")
+                    filesIndexed += 1
+
+    print("Done indexing", filesIndexed, "files")
 
 if __name__ == "__main__":
     load_dotenv(".env")

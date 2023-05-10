@@ -5,6 +5,8 @@ import Input from '@/components/Input'
 import Button from '@/components/Button'
 import Dropdown from '@/components/Dropdown'
 
+import Image from 'next/image'
+
 /* ReturnTypes */
 import returnTypes from '@/assets/returnTypes'
 
@@ -67,9 +69,9 @@ export default function Home() {
 
 		// Construct query string
 		if (searchType.value === 'method') {
-			queryString = `methodName:${methodName}`;
+			queryString = `methodName:${methodName.toLowerCase()}`;
 		} else {
-			queryString = `className:${methodName}`;
+			queryString = `className:${methodName.toLowerCase()}`;
 		}
 
 		if (returnType) {
@@ -151,11 +153,25 @@ export default function Home() {
 		>
 			<div className="h-screen w-full pattern-cross pattern-indigo-600 pattern-bg-primarybg pattern-size-8 pattern-opacity-10 fixed"></div>
 
-			<div className='flex-col flex space-y-10 p-5 md:p-24 w-full items-center'>
-				<h1 className={`text-6xl font-bold text-center rounded-xl px-4 py-1 text-gray-100`}>
-					Congenial System
-				</h1>
-				<div className='sm:w-full md:w-2/3 xl:w-1/2 space-y-5'>
+			<div className='flex-col flex space-y-10 p-5 md:p-14 w-full items-center'>
+				<div className='flex flex-col items-center'>
+					<Image
+						src='/logo.png'
+						alt='Congenial System logo'
+						width={150}
+						height={150}
+						className='rounded-xl'
+					/>
+					<div className='flex flex-col items-center justify-center'>
+						<h1 className={`text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#b84cc3] via-[#5932a6] to-[#4621db] text-transparent bg-clip-text pb-1`}>
+							{'Congenial System'}
+						</h1>
+						<h2 className='text-lg md:text-lg font-thin decoration-[#d732e4] decoration-2 text-gray-50 underline'>
+							{'A Java search engine'}
+						</h2>
+					</div>
+				</div>
+				<div className='sm:w-full md:w-2/3 xl:w-1/2 space-y-5 bg-[#0b101a]/80 p-4 md:p-8 rounded-lg'>
 					<div className='grid grid-cols-2 lg:grid-cols-4 gap-5 items-end'>
 						<div className='col-span-1 lg:col-span-1'>
 							<Dropdown
@@ -226,7 +242,8 @@ export default function Home() {
 						})}
 						<Button
 							title={searchType.value === 'method' ? "Add parameter" : "Add method"}
-							className="w-full bg-transparent border-dashed hover:ring-0 hover:bg-white/5"
+							className="w-full bg-transparent border-dashed border-indigo-600 hover:ring-0 hover:bg-white/5 border-[1px]"
+							naked
 							onClick={() => setParameters([...parameters, { name: '', type: '' }])}
 							icon={<PlusCircleIcon className="w-5 h-5 mr-2" />}
 						/>

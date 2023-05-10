@@ -62,7 +62,11 @@ class Crawler:
         while contents:
             content = contents.pop(0)
             if content.type == "dir":
-                contents.extend(repo.get_contents(content.path))
+                try:
+                    contents.extend(repo.get_contents(content.path))
+                except Exception as e:
+                    print("Could not get contents of path: ", content.path, "Error: ", e)
+                    continue
             elif content.type == "file" and content.name.endswith(".java"):
                 java_files.append({'code': content, 'url': content.html_url, 'download_url': content.download_url})
 

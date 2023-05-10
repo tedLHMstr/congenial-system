@@ -20,6 +20,7 @@ import { ArrowLeftIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import Button from '@/components/Button';
 import { Fragment } from 'react'
 import { Transition } from '@headlessui/react'
+import Image from 'next/image';
 
 /* Requests */
 import axios from "axios";
@@ -74,11 +75,21 @@ function SearchResults() {
 		>
             <div className="h-screen w-full pattern-cross pattern-indigo-600 pattern-bg-primarybg pattern-size-8 pattern-opacity-10 fixed z-0"></div>
             
-            <div className='flex-col flex space-y-10 p-5 md:p-24 w-full items-center z-10'>
+            <div className='flex-col flex space-y-10 p-5 md:p-14 w-full items-center z-10'>
                 
-                <h1 className={`text-6xl font-bold text-center rounded-xl px-4 py-1 text-gray-100`}>
-					Congenial System
-                </h1>
+                <div className='flex flex-row items-center'>
+					<Image
+						src='/logo.png'
+						alt='Congenial System logo'
+						width={100}
+						height={100}
+						className='rounded-xl mr-3'
+					/>
+                    <h1 className={`text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#b84cc3] via-[#5932a6] to-[#4621db] text-transparent bg-clip-text pb-1`}>
+                        {'Congenial System'}
+                    </h1>
+
+				</div>
                 
                 <div className='flex flex-row justify-between items-center md:items-end text-white z-10 w-full sm:w-3/4 md:w-2/3 lg:w-1/2'>
                     <Link href='/' legacyBehavior>
@@ -165,21 +176,28 @@ function ResultCard({ res, searchType }: { res: DocResult, searchType: 'class' |
         const lines = javaCode.split('\n');
         const methodLines = [];
         let openBracesCount = 0;
+        let opened = false;
       
         for (let i = startLine - 1; i < lines.length; i++) {
             const line = lines[i];
-      
+
+            
             if (line.includes('{')) {
                 openBracesCount++;
+                opened = true;
             }
-        
+            
             if (line.includes('}')) {
                 openBracesCount--;
             }
-        
+            
             methodLines.push(line);
+
+            if (openBracesCount === 0 && i == startLine - 1 && line.includes(';')) {
+                break;
+            }
         
-            if (openBracesCount === 0 && i > startLine - 1) {
+            if (openBracesCount === 0 && i > startLine - 1 && opened) {
                 break;
             }
         }
@@ -209,7 +227,7 @@ function ResultCard({ res, searchType }: { res: DocResult, searchType: 'class' |
             >
                 <div className='mb-4 text-white'>
                     <div className='flex flex-row justify-between items-end'>
-                            <h4 className='font-bold text-sm underline mb-2'>{(searchType === 'method') ? 'Method name: ' + (res._source as Method).methodName : 'Class name: ' + (res._source as Class).className}</h4>
+                        <h4 className='font-bold text-sm underline mb-2'>{(searchType === 'method') ? 'Method name: ' + (res._source as Method).methodName : 'Class name: ' + (res._source as Class).className}</h4>
                         <h4 className='text-xs opacity-70'>Score: {res._score.toFixed(2)} </h4>
                     </div>
                     <h4 className='text-xs'>Modifiers: {res._source.modifiers.join(', ')} </h4>

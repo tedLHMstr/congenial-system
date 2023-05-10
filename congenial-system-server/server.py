@@ -27,7 +27,8 @@ async def searchMethods(query: str):
     try: 
         res = indexer.searchMethods(indexName='java_method_index', query=query)
         return res
-    except:
+    except Exception as e:
+        print("Error:", e)
         return
 
 @app.get("/searchClass")
